@@ -74,6 +74,53 @@ public class ObjectDslQuery {
 
 		return this;
 	}
+	
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	public Expression<?> field(String fieldName) throws PortalException {
+	    if (_ctx.isSystemObject()) {
+	        try {
+	            Column sysCol = (Column)_ctx.systemManager.getTable().getColumn(fieldName);
+	            if (sysCol != null) {
+	                return sysCol;
+	            }
+	        }
+	        catch (Exception ignore) {
+	        }
+	    }
+
+	    Column col = (Column)_objectFieldLocalService.getColumn(
+	        _ctx.objectDefinition.getObjectDefinitionId(), fieldName);
+
+	    if (col == null) {
+	        throw new PortalException(
+	            "Field '" + fieldName + "' not found on object definition '" +
+	                _ctx.objectDefinition.getName() + "'");
+	    }
+
+	    return col;
+	}
+
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	public Expression<?> relatedField(String relatedObjectDefinitionERC, String fieldName)
+	    throws PortalException {
+
+	    long companyId = _ctx.objectDefinition.getCompanyId();
+
+	    ObjectDefinition relatedObjectDefinition =
+	        _objectDefinitionLocalService.getObjectDefinitionByExternalReferenceCode(
+	            relatedObjectDefinitionERC, companyId);
+
+	    Column col = (Column)_objectFieldLocalService.getColumn(
+	        relatedObjectDefinition.getObjectDefinitionId(), fieldName);
+
+	    if (col == null) {
+	        throw new PortalException(
+	            "Field '" + fieldName + "' not found on related object definition '" +
+	                relatedObjectDefinition.getName() + "'");
+	    }
+
+	    return col;
+	}	
 
 	public ObjectDslQuery fromBase() {
 		if (_joinStep != null) {
