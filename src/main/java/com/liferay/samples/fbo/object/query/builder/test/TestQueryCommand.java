@@ -32,15 +32,17 @@ public class TestQueryCommand extends AbstractTestQueryCommand {
 
 		DSLQuery query = _objectDslQueryBuilder.forCompany(companyId)
 			.forDefinition(
-				C_PRODUCT_OBJECT_DEFINITION_ERC
+					C_PRODUCT_OBJECT_DEFINITION_ERC
 			).distinct(
 			).selectPrimaryKey(
 			).fromBase(
 			).joinRelationship(
-				"productNo"
+					"productNo"
+			).whereFieldEquals(
+					"shippable", true
 			).whereRelatedFieldEquals(
-				C_PRODUCT_ADDITIONAL_DATA_OBJECT_DEFINITION_ERC,
-				"orderReference", "64193DR1"
+					C_PRODUCT_ADDITIONAL_DATA_OBJECT_DEFINITION_ERC,
+					"orderReference", "64193DR1"
 			).build();
 
 		System.out.println("DSLQuery = " + query);

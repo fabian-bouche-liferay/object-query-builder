@@ -17,6 +17,8 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.sql.dsl.query.FromStep;
 import com.liferay.petra.sql.dsl.query.JoinStep;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -168,7 +170,27 @@ public class ObjectDslQuery {
 
 		return this;
 	}
+	
+	public ObjectDslQuery or(Predicate predicate) {
+		if (_predicate == null) {
+			_predicate = predicate;
+		}
+		else {
+			_predicate = _predicate.or(predicate);
+		}
 
+		return this;
+	}	
+
+	public ObjectDslQuery whereFieldEquals(
+			String fieldName, Serializable value)
+		throws PortalException {
+
+		Predicate predicate = _eqField(fieldName, value);
+
+		return and(predicate);
+	}
+	
 	public ObjectDslQuery whereRelatedFieldEquals(
 			long relatedObjectDefinitionId, String fieldName,
 			Serializable value)
@@ -377,6 +399,38 @@ public class ObjectDslQuery {
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
+	private Predicate _eqField(String fieldName, Serializable value)
+	    throws PortalException {
+
+	    Column column = null;
+
+	    if (_ctx.isSystemObject()) {
+	        try {
+	            column = _ctx.systemManager.getTable().getColumn(fieldName);
+	        }
+	        catch (Exception ignore) {
+	        }
+
+	        if (column == null) {
+	            column = (Column)_objectFieldLocalService.getColumn(
+	                _ctx.objectDefinition.getObjectDefinitionId(), fieldName);
+	        }
+	    }
+	    else {
+	        column = (Column)_objectFieldLocalService.getColumn(
+	            _ctx.objectDefinition.getObjectDefinitionId(), fieldName);
+	    }
+
+	    if (column == null) {
+	        throw new PortalException(
+	            "Field '" + fieldName + "' not found on object definition '" +
+	                _ctx.objectDefinition.getName() + "'");
+	    }
+
+	    return column.eq(value);
+	}
+	
+	@SuppressWarnings({"rawtypes", "unchecked"})
 	private Predicate _eqRelatedField(
 			long relatedObjectDefinitionId, String fieldName,
 			Serializable value)
@@ -417,4 +471,7 @@ public class ObjectDslQuery {
 			objectDefinition.getExtensionDBTableName());
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+			ObjectDslQuery.class);
+	
 }
