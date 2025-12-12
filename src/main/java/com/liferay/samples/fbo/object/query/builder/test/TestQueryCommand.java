@@ -33,6 +33,7 @@ public class TestQueryCommand extends AbstractTestQueryCommand {
 		DSLQuery query = _objectDslQueryBuilder.forCompany(companyId)
 			.forDefinition(
 				C_PRODUCT_OBJECT_DEFINITION_ERC
+			).distinct(
 			).selectPrimaryKey(
 			).fromBase(
 			).joinRelationship(

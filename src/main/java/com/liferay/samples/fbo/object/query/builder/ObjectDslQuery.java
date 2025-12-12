@@ -14,11 +14,11 @@ import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Expression;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.petra.sql.dsl.query.FromStep;
 import com.liferay.petra.sql.dsl.query.JoinStep;
 import com.liferay.portal.kernel.exception.PortalException;
 
 import java.io.Serializable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,6 +37,8 @@ public class ObjectDslQuery {
 
 	private JoinStep _joinStep;
 	private Predicate _predicate;
+	
+	private boolean _distinct = false;
 
 	public ObjectDslQuery(
 		ObjectContext ctx,
@@ -49,6 +51,13 @@ public class ObjectDslQuery {
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 	}
+	
+	public ObjectDslQuery distinct() {
+		_distinct = true;
+		
+		return this;
+	}
+	
 
 	public ObjectDslQuery select(Expression<?>... expressions) {
 		for (Expression<?> expression : expressions) {
@@ -76,10 +85,20 @@ public class ObjectDslQuery {
 		Expression<?>[] selectArray = _selectExpressions.toArray(
 			new Expression<?>[0]);
 
+		FromStep fromStep;
+		
+		if(_distinct) {
+			fromStep = DSLQueryFactoryUtil.selectDistinct(
+					selectArray
+				);
+		} else {
+			fromStep = DSLQueryFactoryUtil.select(
+					selectArray
+				);
+		}
+		
 		if (_ctx.isSystemObject()) {
-			_joinStep = DSLQueryFactoryUtil.select(
-				selectArray
-			).from(
+			_joinStep = fromStep.from(
 				_ctx.getRootTable()
 			).leftJoinOn(
 				_ctx.extensionTable,
@@ -90,9 +109,7 @@ public class ObjectDslQuery {
 			);
 		}
 		else {
-			_joinStep = DSLQueryFactoryUtil.select(
-				selectArray
-			).from(
+			_joinStep = fromStep.from(
 				_ctx.baseTable
 			).leftJoinOn(
 				_ctx.extensionTable,
@@ -399,4 +416,5 @@ public class ObjectDslQuery {
 				objectDefinition.getExtensionDBTableName()),
 			objectDefinition.getExtensionDBTableName());
 	}
+
 }
