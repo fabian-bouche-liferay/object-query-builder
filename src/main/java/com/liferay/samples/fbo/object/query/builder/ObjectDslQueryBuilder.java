@@ -1,12 +1,9 @@
 package com.liferay.samples.fbo.object.query.builder;
 
 import com.liferay.object.model.ObjectDefinition;
-import com.liferay.object.petra.sql.dsl.DynamicObjectDefinitionTable;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
-import com.liferay.object.system.SystemObjectDefinitionManager;
-import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.exception.PortalException;
 
 import org.osgi.service.component.annotations.Component;
@@ -19,109 +16,28 @@ import org.osgi.service.component.annotations.Reference;
 public class ObjectDslQueryBuilder {
 
 	public CompanyScopedBuilder forCompany(long companyId) {
-		return new CompanyScopedBuilder(companyId, this, 
+		return new CompanyScopedBuilder(companyId,
 				_objectDefinitionLocalService,
 				_objectFieldLocalService,
-				_objectRelationshipLocalService);
+				_objectRelationshipLocalService,
+				_objectContextHelper);
 	}
-
-	public ObjectDslQuery forDefinition(
-			long companyId, String objectDefinitionERC)
+	
+	public ObjectDslQuery forDefinition(long companyId, String erc)
 		throws PortalException {
 
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.
-				getObjectDefinitionByExternalReferenceCode(
-					objectDefinitionERC, companyId);
+		ObjectDefinition od =
+			_objectDefinitionLocalService.getObjectDefinitionByExternalReferenceCode(
+				erc, companyId);
 
-		ObjectContext context = createContext(objectDefinition);
+		ObjectContext ctx = _objectContextHelper.createContext(od);
 
-		return new ObjectDslQuery(
-			context, _objectDefinitionLocalService,
-			_objectFieldLocalService, _objectRelationshipLocalService);
+		return new ObjectDslQuery(ctx, _objectContextHelper,
+			_objectDefinitionLocalService, _objectFieldLocalService, _objectRelationshipLocalService);
 	}
 
-	public ObjectDslQuery forDefinition(long objectDefinitionId)
-		throws PortalException {
-
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.getObjectDefinition(
-				objectDefinitionId);
-
-		ObjectContext context = createContext(objectDefinition);
-
-		return new ObjectDslQuery(
-			context, _objectDefinitionLocalService,
-			_objectFieldLocalService, _objectRelationshipLocalService);
-	}
-
-	public ObjectContext getContext(long objectDefinitionId)
-		throws PortalException {
-
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.getObjectDefinition(
-				objectDefinitionId);
-
-		return createContext(objectDefinition);
-	}
-
-	ObjectContext createContext(ObjectDefinition objectDefinition)
-		throws PortalException {
-
-		DynamicObjectDefinitionTable baseTable =
-			_createDynamicTable(objectDefinition);
-
-		DynamicObjectDefinitionTable extensionTable =
-			_createExtensionDynamicTable(objectDefinition);
-
-		SystemObjectDefinitionManager systemManager = null;
-		com.liferay.petra.sql.dsl.Column<?, Long> pkColumn;
-
-		if (objectDefinition.isUnmodifiableSystemObject()) {
-			systemManager =
-				_systemObjectDefinitionManagerRegistry.
-					getSystemObjectDefinitionManager(
-						objectDefinition.getName());
-
-			pkColumn = systemManager.getPrimaryKeyColumn();
-		}
-		else {
-			pkColumn = baseTable.getPrimaryKeyColumn();
-		}
-
-		return new ObjectContext(
-			objectDefinition, baseTable, extensionTable, systemManager,
-			pkColumn);
-	}
-
-	private DynamicObjectDefinitionTable _createDynamicTable(
-			ObjectDefinition objectDefinition)
-		throws PortalException {
-
-		long objectDefinitionId =
-			objectDefinition.getObjectDefinitionId();
-
-		return new DynamicObjectDefinitionTable(
-			objectDefinition,
-			_objectFieldLocalService.getObjectFields(
-				objectDefinitionId, objectDefinition.getDBTableName()),
-			objectDefinition.getDBTableName());
-	}
-
-	private DynamicObjectDefinitionTable _createExtensionDynamicTable(
-			ObjectDefinition objectDefinition)
-		throws PortalException {
-
-		long objectDefinitionId =
-			objectDefinition.getObjectDefinitionId();
-
-		return new DynamicObjectDefinitionTable(
-			objectDefinition,
-			_objectFieldLocalService.getObjectFields(
-				objectDefinitionId,
-				objectDefinition.getExtensionDBTableName()),
-			objectDefinition.getExtensionDBTableName());
-	}
+	@Reference
+	private ObjectContextHelper _objectContextHelper;
 
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
@@ -131,8 +47,4 @@ public class ObjectDslQueryBuilder {
 
 	@Reference
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
-
-	@Reference
-	private SystemObjectDefinitionManagerRegistry
-		_systemObjectDefinitionManagerRegistry;
 }

@@ -21,12 +21,23 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class TestQueryCommand extends AbstractTestQueryCommand {
 
+	private static final String C_ACCOUNT_OBJECT_DEFINITION_ERC =
+			"L_ACCOUNT";
+
 	private static final String C_PRODUCT_OBJECT_DEFINITION_ERC =
-		"L_COMMERCE_PRODUCT_DEFINITION";
+			"L_COMMERCE_PRODUCT_DEFINITION";
 
 	private static final String
 		C_PRODUCT_ADDITIONAL_DATA_OBJECT_DEFINITION_ERC =
 			"productAdditionalData";
+	
+	private static final String
+		C_ACCOUNT_ADDITIONAL_DATA_OBJECT_DEFINITION_ERC =
+			"accountAdditionalData";
+	
+	private static final String
+		C_SALES_ORG_OBJECT_DEFINITION_ERC =
+			"salesOrg";
 
 //	@Override
 //	protected void _doTestQuery(long companyId) throws PortalException {
@@ -82,7 +93,7 @@ public class TestQueryCommand extends AbstractTestQueryCommand {
 		List<Object[]> response = _objectEntryPersistence.dslQuery(query);
 
 		response.forEach(row -> {
-		    Boolean shippable = (Boolean) row[0];
+			Boolean shippable = (Boolean) row[0];
 		    String externalNumber = (String) row[1];
 
 		    System.out.println(
@@ -90,6 +101,39 @@ public class TestQueryCommand extends AbstractTestQueryCommand {
 		    );
 		});
 	}
+	
+//	@Override
+//	protected void _doTestQuery(long companyId) throws PortalException {
+//
+//		ObjectDslQuery q = _objectDslQueryBuilder.forCompany(companyId)
+//			.forDefinition(
+//					C_ACCOUNT_OBJECT_DEFINITION_ERC
+//			);
+//		
+//		DSLQuery query = q.distinct()
+//			.select(
+//					q.field("name"),
+//					q.relatedField(C_SALES_ORG_OBJECT_DEFINITION_ERC, "name")
+//			).fromBase(
+//			).joinRelationship("accountName1"
+//		    ).joinRelationship(
+//		    		C_ACCOUNT_ADDITIONAL_DATA_OBJECT_DEFINITION_ERC, "salesOrganization",
+//		    		C_SALES_ORG_OBJECT_DEFINITION_ERC, "externalReferenceCode"
+//			).build();
+//		
+//		System.out.println("DSLQuery = " + query);
+//
+//		List<Object[]> response = _objectEntryPersistence.dslQuery(query);
+//
+//		response.forEach(row -> {
+//		    String name = (String) row[0];
+//		    String salesOrgName = (String) row[1];
+//
+//		    System.out.println(
+//		        "name=" + name + ", salesOrgName=" + salesOrgName
+//		    );
+//		});
+//	}	
 	
 	@Reference
 	private ObjectDslQueryBuilder _objectDslQueryBuilder;

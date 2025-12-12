@@ -9,17 +9,17 @@ import com.liferay.portal.kernel.exception.PortalException;
 public class CompanyScopedBuilder {
 
 	private final long _companyId;
-	private final ObjectDslQueryBuilder _builder;
 
-	public CompanyScopedBuilder(long companyId, ObjectDslQueryBuilder builder,
+	public CompanyScopedBuilder(long companyId,
 			ObjectDefinitionLocalService objectDefinitionLocalService,
 			ObjectFieldLocalService objectFieldLocalService,
-			ObjectRelationshipLocalService objectRelationshipLocalService) {
+			ObjectRelationshipLocalService objectRelationshipLocalService,
+			ObjectContextHelper objectContextHelper) {
 		_companyId = companyId;
-		_builder = builder;
 		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
+		_objectContextHelper = objectContextHelper;
 	}
 	
 	public ObjectDslQuery forDefinition(String objectDefinitionERC)
@@ -29,12 +29,10 @@ public class CompanyScopedBuilder {
 			_objectDefinitionLocalService.getObjectDefinitionByExternalReferenceCode(
 				objectDefinitionERC, _companyId);
 
-		ObjectContext context = _builder.createContext(objectDefinition);
-
-		return new ObjectDslQuery(
-			context, _objectDefinitionLocalService,
-			_objectFieldLocalService,
-			_objectRelationshipLocalService);
+		ObjectContext context = _objectContextHelper.createContext(objectDefinition);
+		
+		return new ObjectDslQuery(context, _objectContextHelper,
+				_objectDefinitionLocalService, _objectFieldLocalService, _objectRelationshipLocalService);
 	}
 
 	public ObjectDslQuery forDefinition(long objectDefinitionId)
@@ -44,16 +42,15 @@ public class CompanyScopedBuilder {
 				_objectDefinitionLocalService.getObjectDefinition(
 				objectDefinitionId);
 
-		ObjectContext context = _builder.createContext(objectDefinition);
+		ObjectContext context = _objectContextHelper.createContext(objectDefinition);
 
-		return new ObjectDslQuery(
-			context, _objectDefinitionLocalService,
-			_objectFieldLocalService,
-			_objectRelationshipLocalService);
+		return new ObjectDslQuery(context, _objectContextHelper,
+				_objectDefinitionLocalService, _objectFieldLocalService, _objectRelationshipLocalService);
 	}
 	
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectFieldLocalService _objectFieldLocalService;
 	private final ObjectRelationshipLocalService
 		_objectRelationshipLocalService;
+	private final ObjectContextHelper _objectContextHelper;
 }
